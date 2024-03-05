@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryMgt.Api", "InventoryMgt.Api\InventoryMgt.Api.csproj", "{DD135216-1ECB-42F0-BC49-DBA4680A1C91}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InventoryMgt.Data", "InventoryMgt.Data\InventoryMgt.Data.csproj", "{9A9713C8-7DFE-42DF-B0A9-2B89C118831C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DD135216-1ECB-42F0-BC49-DBA4680A1C91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD135216-1ECB-42F0-BC49-DBA4680A1C91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD135216-1ECB-42F0-BC49-DBA4680A1C91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD135216-1ECB-42F0-BC49-DBA4680A1C91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A9713C8-7DFE-42DF-B0A9-2B89C118831C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A9713C8-7DFE-42DF-B0A9-2B89C118831C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A9713C8-7DFE-42DF-B0A9-2B89C118831C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A9713C8-7DFE-42DF-B0A9-2B89C118831C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {485AEA68-5453-4181-B59C-FAD3B699DC27}
+	EndGlobalSection
+EndGlobal
