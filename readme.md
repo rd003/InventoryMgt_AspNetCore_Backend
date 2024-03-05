@@ -1,6 +1,6 @@
-# Inventory Mgt
+# Inventory Management (Basic)
 
-Basic Inventory Management System backend with aspnet core web api.
+Basic Inventory Management System backend with aspnet core web api. It does not have any authentication system.
 
 ## TechStack
 
