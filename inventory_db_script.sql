@@ -47,6 +47,7 @@ CreateDate  datetime not null,
 UpdateDate  datetime not null,
 IsDeleted bit,
 ProductId int not null references Product(Id),
-SellingDate datetime not null,Quantity float, 
+SellingDate datetime not null,
+Quantity float, 
 [Description] nvarchar(100) not null
 )
