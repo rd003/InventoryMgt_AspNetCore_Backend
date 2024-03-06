@@ -51,3 +51,21 @@ SellingDate datetime not null,
 Quantity float, 
 [Description] nvarchar(100) not null
 )
+
+--stored procedures
+
+create procedure Usp_AddProduct
+(
+  @ProductName nvarchar(50), @CategoryId int, @Price decimal
+)
+as
+begin
+declare @lastId int
+insert into Product (CreateDate,UpdateDate,IsDeleted,ProductName,CategoryId,Price)
+values(getdate(),getdate(),0,'product 3',2,100)
+select @lastId=SCOPE_IDENTITY()
+
+select p.*,c.CategoryName from Product p join Category c on p.CategoryId = c.Id
+where p.IsDeleted=0 and c.IsDeleted=0 and p.Id=@lastId
+
+end

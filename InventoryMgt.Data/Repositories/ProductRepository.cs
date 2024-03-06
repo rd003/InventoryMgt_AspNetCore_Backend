@@ -25,17 +25,15 @@ public class ProductRepository : IProductRepository
     }
     public async Task<ProductDisplay> AddProduct(Product product)
     {
-        // using IDbConnection connection = new SqlConnection(_constr);
-        // string sql = @"";
-        // int createdId = await connection.ExecuteScalarAsync<int>(sql, new
-        // {
-        //     ProductName = product.ProductName,
-        //     CategoryId = product.CategoryId,
-        //     Price = product.Price
-        // });
-        // product.Id = createdId;
-        // return product;
-        throw new NotImplementedException();
+        using IDbConnection connection = new SqlConnection(_constr);
+        ProductDisplay createdProduct = await connection.QueryFirstAsync<ProductDisplay>("Usp_AddProduct", new
+        {
+            ProductName = product.ProductName,
+            CategoryId = product.CategoryId,
+            Price = product.Price
+        }, commandType: CommandType.StoredProcedure);
+
+        return createdProduct;
     }
 
     public async Task UpdatProduct(Product product)
