@@ -1,3 +1,4 @@
+using InventoryMgt.Api.CustomExceptions;
 using InventoryMgt.Data.Models;
 using InventoryMgt.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
@@ -21,9 +22,14 @@ public class CategoryController : ControllerBase
     }
 
     [HttpPut("{Id}")]
-    public async Task<IActionResult> UpdateCategory(int Id, [FromBody] Category category)
+    public async Task<IActionResult> UpdateCategory(int id, [FromBody] Category categoryToUpdate)
     {
-        await _categoryRepository.UpdateCategory(category);
+        if (id != categoryToUpdate.Id)
+            throw new BadRequestException("You are passing an invalid id");
+        var category = await _categoryRepository.GetCategory(id);
+        if (category == null)
+            throw new NotFoundException($"category with id : {id} does not exists");
+        await _categoryRepository.UpdateCategory(categoryToUpdate);
         return NoContent();
     }
 
@@ -37,13 +43,18 @@ public class CategoryController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetCategory(int id)
     {
-        var contegory = await _categoryRepository.GetCategory(id);
-        return Ok(contegory);
+        var category = await _categoryRepository.GetCategory(id);
+        if (category == null)
+            throw new NotFoundException($"category with id : {id} does not exists");
+        return Ok(category);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCategory(int id)
     {
+        var category = await _categoryRepository.GetCategory(id);
+        if (category == null)
+            throw new NotFoundException($"category with id : {id} does not exists");
         await _categoryRepository.DeleteCategory(id);
         return NoContent();
     }
