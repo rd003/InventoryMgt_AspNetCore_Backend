@@ -17,7 +17,7 @@ public interface IProductRepository
 public class ProductRepository : IProductRepository
 {
     private readonly IConfiguration _config;
-    private readonly string _constr;
+    private readonly string? _constr;
     public ProductRepository(IConfiguration config)
     {
         _config = config;
