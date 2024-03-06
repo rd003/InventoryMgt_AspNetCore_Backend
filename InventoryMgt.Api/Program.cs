@@ -1,3 +1,4 @@
+using InventoryMgt.Api.Middlewares;
 using InventoryMgt.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,7 +23,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
+app.ConfigureExceptionMiddleware();
 app.MapControllers();
 
 app.Run();
