@@ -19,4 +19,4 @@ Database script is available in inventory_db_script.sql file, which is located i
 - Find the database script and run it.
 - You can run your project now
 
-🙂 Github star is appreciate.
+🙂 Github star is appreciated.
