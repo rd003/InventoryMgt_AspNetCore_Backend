@@ -56,6 +56,31 @@ Price decimal(18,2) not null
 
 --stored procedures
 
+create procedure usp_AddCategory(@CategoryName nvarchar(50),@CategoryId int null)
+as
+begin
+insert into Category(CreateDate,UpdateDate,IsDeleted,CategoryName,CategoryId)
+values(getdate(),getdate(),0,@CategoryName,@CategoryId);
+
+select c.*,parent.CategoryName as ParentCategoryName
+from category c left join category parent
+on c.CategoryId=parent.Id where c.Id=scope_identity()
+end
+
+create procedure usp_UpdateCategory(@Id int,@CategoryName nvarchar(50),@CategoryId int null)
+as
+begin
+Update Category
+          set
+          UpdateDate=getdate(),
+          CategoryName=@CategoryName,
+          CategoryId=@CategoryId where Id=@Id
+
+select c.*,parent.CategoryName as ParentCategoryName
+from category c left join category parent
+on c.CategoryId=parent.Id where c.Id=@Id
+end
+
 create procedure Usp_AddProduct
 (
   @ProductName nvarchar(50), @CategoryId int, @Price decimal(18,2)

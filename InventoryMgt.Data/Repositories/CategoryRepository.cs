@@ -26,17 +26,13 @@ public class CategoryRepository : ICategoryRepository
     public async Task<Category> AddCategory(Category category)
     {
         using IDbConnection connection = new SqlConnection(_connectionString);
-        string sql = "insert into Category(CreateDate,UpdateDate,IsDeleted,CategoryName,CategoryId) values(@CreateDate,@UpdateDate,@IsDeleted,@CategoryName,@CategoryId);select scope_identity()";
-        int addedCategoryId = await connection.ExecuteScalarAsync<int>(sql, new
+
+        var createdCategory = await connection.QueryFirstAsync<Category>("usp_AddCategory", new
         {
-            CreateDate = DateTime.UtcNow,
-            UpdateDate = DateTime.UtcNow,
-            IsDeleted = false,
             CategoryName = category.CategoryName,
             CategoryId = category.CategoryId
-        });
-        category.Id = addedCategoryId;
-        return category;
+        }, commandType: CommandType.StoredProcedure);
+        return createdCategory;
     }
 
     public async Task DeleteCategory(int id)
@@ -69,15 +65,9 @@ public class CategoryRepository : ICategoryRepository
     {
         category.UpdateDate = DateTime.UtcNow;
         using IDbConnection connection = new SqlConnection(_connectionString);
-        string sql = @"Update Category
-          set
-          UpdateDate=@UpdateDate,
-          CategoryName=@CategoryName,
-          CategoryId=@CategoryId where Id=@Id";
-        await connection.ExecuteAsync(sql, new
+        await connection.QueryAsync<Category>("usp_UpdateCategory", new
         {
             Id = category.Id,
-            UpdateDate = category.UpdateDate,
             CategoryName = category.CategoryName,
             CategoryId = category.CategoryId
         });

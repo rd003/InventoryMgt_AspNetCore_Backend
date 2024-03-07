@@ -8,4 +8,5 @@ public class Category : BaseSchema
     [MaxLength(50)]
     public string? CategoryName { get; set; }
     public int? CategoryId { get; set; }
+    public string? ParentCategoryName { get; set; }
 }
