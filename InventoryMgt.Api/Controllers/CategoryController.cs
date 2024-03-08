@@ -29,8 +29,8 @@ public class CategoryController : ControllerBase
         var category = await _categoryRepository.GetCategory(id);
         if (category == null)
             throw new NotFoundException($"category with id : {id} does not exists");
-        await _categoryRepository.UpdateCategory(categoryToUpdate);
-        return NoContent();
+        var updatedCategory = await _categoryRepository.UpdateCategory(categoryToUpdate);
+        return Ok(updatedCategory);
     }
 
     [HttpGet]

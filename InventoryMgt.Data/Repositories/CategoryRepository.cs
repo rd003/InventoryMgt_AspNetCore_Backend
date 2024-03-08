@@ -9,7 +9,7 @@ namespace InventoryMgt.Data.Repositories;
 public interface ICategoryRepository
 {
     Task<Category> AddCategory(Category category);
-    Task UpdateCategory(Category category);
+    Task<Category> UpdateCategory(Category category);
     Task DeleteCategory(int id);
     Task<Category?> GetCategory(int id);
     Task<IEnumerable<Category>> GetCategories();
@@ -49,7 +49,9 @@ public class CategoryRepository : ICategoryRepository
     public async Task<IEnumerable<Category>> GetCategories()
     {
         using IDbConnection connection = new SqlConnection(_connectionString);
-        string sql = "select * from Category where IsDeleted=0";
+        string sql = @"select c.*,parent.CategoryName as ParentCategoryName
+from category c left join category parent
+on c.CategoryId=parent.Id";
         return await connection.QueryAsync<Category>(sql);
 
     }
@@ -61,15 +63,16 @@ public class CategoryRepository : ICategoryRepository
         return await connection.QueryFirstOrDefaultAsync<Category>(sql, new { Id = id });
     }
 
-    public async Task UpdateCategory(Category category)
+    public async Task<Category> UpdateCategory(Category category)
     {
         category.UpdateDate = DateTime.UtcNow;
         using IDbConnection connection = new SqlConnection(_connectionString);
-        await connection.QueryAsync<Category>("usp_UpdateCategory", new
+        var updatedCategory = await connection.QueryFirstAsync<Category>("usp_UpdateCategory", new
         {
             Id = category.Id,
             CategoryName = category.CategoryName,
             CategoryId = category.CategoryId
         });
+        return updatedCategory;
     }
 }
