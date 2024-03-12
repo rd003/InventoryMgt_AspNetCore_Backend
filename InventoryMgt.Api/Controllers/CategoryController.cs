@@ -34,9 +34,9 @@ public class CategoryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetCategories()
+    public async Task<IActionResult> GetCategories(string searchTerm = "")
     {
-        var contegories = await _categoryRepository.GetCategories();
+        var contegories = await _categoryRepository.GetCategories(searchTerm);
         return Ok(contegories);
     }
 

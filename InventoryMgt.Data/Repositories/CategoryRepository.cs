@@ -12,7 +12,7 @@ public interface ICategoryRepository
     Task<Category> UpdateCategory(Category category);
     Task DeleteCategory(int id);
     Task<Category?> GetCategory(int id);
-    Task<IEnumerable<Category>> GetCategories();
+    Task<IEnumerable<Category>> GetCategories(string searchTerm = "");
 }
 public class CategoryRepository : ICategoryRepository
 {
@@ -46,13 +46,10 @@ public class CategoryRepository : ICategoryRepository
         });
     }
 
-    public async Task<IEnumerable<Category>> GetCategories()
+    public async Task<IEnumerable<Category>> GetCategories(string searchTerm = "")
     {
         using IDbConnection connection = new SqlConnection(_connectionString);
-        string sql = @"select c.*,parent.CategoryName as ParentCategoryName
-from category c left join category parent
-on c.CategoryId=parent.Id";
-        return await connection.QueryAsync<Category>(sql);
+        return await connection.QueryAsync<Category>("usp_getCategories", new { searchTerm }, commandType: CommandType.StoredProcedure);
 
     }
 
