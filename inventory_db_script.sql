@@ -67,6 +67,7 @@ from category c left join category parent
 on c.CategoryId=parent.Id where c.Id=scope_identity()
 end
 
+
 create procedure usp_UpdateCategory(@Id int,@CategoryName nvarchar(50),@CategoryId int null)
 as
 begin
@@ -79,6 +80,14 @@ Update Category
 select c.*,parent.CategoryName as ParentCategoryName
 from category c left join category parent
 on c.CategoryId=parent.Id where c.Id=@Id
+end
+
+create proc usp_getCategories  @searchTerm nvarchar(50)=''
+as 
+begin
+select c.*,parent.CategoryName as ParentCategoryName
+from category c left join category parent
+on c.CategoryId=parent.Id where (@searchTerm ='' or c.CategoryName like '' + @searchTerm + '%')  and  c.IsDeleted=0 
 end
 
 create procedure Usp_AddProduct

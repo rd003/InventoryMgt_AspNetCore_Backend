@@ -1,4 +1,4 @@
-# Inventory Management (Basic)
+# Inventory Management (Basic) (Work in progress)
 
 Basic Inventory Management System backend with aspnet core web api. It does not have any authentication system.
 
