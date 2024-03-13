@@ -103,3 +103,21 @@ select @lastId=SCOPE_IDENTITY()
 
 select p.*,c.CategoryName from Product p join Category c on p.CategoryId = c.Id
 where p.IsDeleted=0 and c.IsDeleted=0 and p.Id=@lastId
+
+create proc usp_updateProduct 
+@Id int,
+@ProductName nvarchar(50),
+@CategoryId int,
+@Price decimal(18,2)
+as
+begin
+update Product set
+         UpdateDate=getdate(), 
+         ProductName=@ProductName,
+         CategoryId=@CategoryId,
+         Price=@Price
+         where Id=@Id
+
+select p.*,c.CategoryName from Product p join Category c on p.CategoryId = c.Id
+where p.IsDeleted=0 and c.IsDeleted=0 and p.Id=@Id
+end

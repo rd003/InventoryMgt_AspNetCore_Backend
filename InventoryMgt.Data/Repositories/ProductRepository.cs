@@ -9,7 +9,7 @@ namespace InventoryMgt.Data.Repositories;
 public interface IProductRepository
 {
     Task<ProductDisplay> AddProduct(Product product);
-    Task UpdatProduct(Product product);
+    Task<ProductDisplay> UpdatProduct(Product product);
     Task DeleteProduct(int id);
     Task<IEnumerable<ProductDisplay>> GetProducts();
     Task<ProductDisplay?> GetProduct(int id);
@@ -36,22 +36,19 @@ public class ProductRepository : IProductRepository
         return createdProduct;
     }
 
-    public async Task UpdatProduct(Product product)
+    public async Task<ProductDisplay> UpdatProduct(Product product)
     {
         using IDbConnection connection = new SqlConnection(_constr);
-        string sql = @"update Product set
-         UpdateDate=getdate(), 
-         ProductName=@ProductName,
-         CategoryId=@CategoryId,
-         Price=@Price
-         where Id=@Id";
-        await connection.ExecuteAsync(sql, new
+        var updatedProduct = await connection.QueryFirstAsync<ProductDisplay>("usp_updateProduct", new
         {
             ProductName = product.ProductName,
             CategoryId = product.CategoryId,
             Price = product.Price,
             Id = product.Id
-        });
+        },
+        commandType: CommandType.StoredProcedure
+        );
+        return updatedProduct;
     }
 
     public async Task DeleteProduct(int id)
