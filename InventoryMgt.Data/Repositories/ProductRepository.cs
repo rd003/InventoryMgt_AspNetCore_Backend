@@ -11,7 +11,7 @@ public interface IProductRepository
     Task<ProductDisplay> AddProduct(Product product);
     Task<ProductDisplay> UpdatProduct(Product product);
     Task DeleteProduct(int id);
-    Task<IEnumerable<ProductDisplay>> GetProducts();
+    Task<PagedProduct> GetProducts(int page = 1, int limit = 4, string? searchTerm = null, string? sortColumn = null, string? @sortDirection = null);
     Task<ProductDisplay?> GetProduct(int id);
 }
 public class ProductRepository : IProductRepository
@@ -67,12 +67,27 @@ public class ProductRepository : IProductRepository
         return product;
     }
 
-    public async Task<IEnumerable<ProductDisplay>> GetProducts()
+    public async Task<PagedProduct> GetProducts(int page = 1, int limit = 4, string? searchTerm = null, string? sortColumn = null, string? @sortDirection = null)
     {
         using IDbConnection connection = new SqlConnection(_constr);
-        string sql = @"select p.*, c.CategoryName from Product p 
-        join Category c on p.CategoryId=c.Id where p.IsDeleted=0 and c.IsDeleted=0";
-        return await connection.QueryAsync<ProductDisplay>(sql);
+        var result = await connection.QueryMultipleAsync("usp_getProducts", new
+        {
+            page,
+            limit,
+            searchTerm,
+            sortColumn,
+            sortDirection
+        }, commandType: CommandType.StoredProcedure);
+        var products = await result.ReadAsync<ProductDisplay>();
+        var productCountResult = await result.ReadFirstAsync<ProductCount>();
+        return new PagedProduct
+        {
+            Products = products,
+            TotalPages = productCountResult.TotalPages,
+            TotalRecords = productCountResult.TotalRecords,
+            Page = page,
+            Limit = limit,
+        };
     }
 
 

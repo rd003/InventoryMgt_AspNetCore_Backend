@@ -1,7 +1,9 @@
+using System.Text.Json;
 using InventoryMgt.Api.CustomExceptions;
 using InventoryMgt.Data.Models;
 using InventoryMgt.Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi.Validations;
 
 namespace InventoryMgt.Api.Controllers;
 [ApiController]
@@ -53,9 +55,27 @@ public class ProductController : ControllerBase
     }
 
     [HttpGet()]
-    public async Task<IActionResult> GetProducts()
+    public async Task<IActionResult> GetProducts(int page = 1, int limit = 4, string? searchTerm = null, string? sortColumn = null, string? @sortDirection = null)
     {
-        var products = await _productRepo.GetProducts();
+        if (sortDirection != null && !new[] { "asc", "desc" }.Contains(sortDirection))
+        {
+            throw new BadRequestException("'sortDirection' accepts values 'asc' and 'desc' only");
+        }
+
+        if (sortColumn != null && !new[] { "Id", "ProductName", "Price", "CreateDate", "UpdateDate", "CategoryName" }.Contains(sortColumn))
+        {
+            throw new BadRequestException("'sortColumn' accepts values ('Id','ProductName','CreateDate','UpdateDate','Price','CategoryName') only");
+        }
+        var productResult = await _productRepo.GetProducts(page, limit, searchTerm, sortColumn, sortDirection);
+        var products = productResult.Products;
+        var paginationHeader = new
+        {
+            productResult.TotalRecords,
+            productResult.TotalPages,
+            productResult.Page,
+            productResult.Limit,
+        };
+        Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationHeader));
         return Ok(products);
     }
 }

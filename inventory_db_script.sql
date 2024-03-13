@@ -90,6 +90,8 @@ from category c left join category parent
 on c.CategoryId=parent.Id where (@searchTerm ='' or c.CategoryName like '' + @searchTerm + '%')  and  c.IsDeleted=0 
 end
 
+--product's stored procedures
+
 create procedure Usp_AddProduct
 (
   @ProductName nvarchar(50), @CategoryId int, @Price decimal(18,2)
@@ -120,4 +122,39 @@ update Product set
 
 select p.*,c.CategoryName from Product p join Category c on p.CategoryId = c.Id
 where p.IsDeleted=0 and c.IsDeleted=0 and p.Id=@Id
+end
+
+
+create procedure usp_getProducts 
+  @page int=1,
+  @limit int=4,
+  @searchTerm nvarchar(50) = null,
+  @sortColumn nvarchar(20)='Id',
+ @sortDirection nvarchar(5)='asc' 
+as 
+begin
+select p.*, c.CategoryName from Product p join Category c
+         on p.CategoryId=c.Id where (@searchTerm is null or p.ProductName like '%'+@searchTerm+'%' or c.CategoryName like '%'+@searchTerm+'%') 
+		 and p.IsDeleted=0 and c.IsDeleted=0 
+order by
+case when @sortColumn='Id' and @sortDirection='asc' then p.Id end,
+case when @sortColumn='Id' and @sortDirection='desc' then p.Id end desc,
+case when @sortColumn='ProductName' and @sortDirection='asc' then p.ProductName end,
+case when @sortColumn='ProductName' and @sortDirection='desc' then p.ProductName end desc,
+case when @sortColumn='Price' and @sortDirection='asc' then p.Price end,
+case when @sortColumn='Price' and @sortDirection='desc' then p.Price end desc,
+case when @sortColumn='CreateDate' and @sortDirection='asc' then p.CreateDate end,
+case when @sortColumn='CreateDate' and @sortDirection='desc' then p.CreateDate end desc,
+case when @sortColumn='UpdateDate' and @sortDirection='asc' then p.UpdateDate end,
+case when @sortColumn='UpdateDate' and @sortDirection='desc' then p.UpdateDate end desc,
+case when @sortColumn='CategoryName' and @sortDirection='asc' then c.CategoryName end,
+case when @sortColumn='CategoryName' and @sortDirection='desc' then c.CategoryName end desc
+
+OFFSET(@page-1)*@limit ROWS
+FETCH NEXT @limit ROWS ONLY;
+
+select Count(p.Id) as TotalRecords,CAST(CEILING((count(p.Id)*1.0)/@limit)as int) as TotalPages
+ from Product p join Category c
+         on p.CategoryId=c.Id where (@searchTerm is null or p.ProductName like '%'+@searchTerm+'%' or c.CategoryName like '%'+@searchTerm+'%') 
+		 and p.IsDeleted=0 and c.IsDeleted=0 
 end
