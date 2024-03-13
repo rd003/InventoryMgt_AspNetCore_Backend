@@ -29,8 +29,8 @@ public class ProductController : ControllerBase
         var existingProduct = await _productRepo.GetProduct(id);
         if (existingProduct == null)
             throw new NotFoundException($"Product with id : {id} does not found");
-        await _productRepo.UpdatProduct(product);
-        return NoContent();
+        var updatedProduct = await _productRepo.UpdatProduct(product);
+        return Ok(updatedProduct);
     }
 
     [HttpDelete("{id}")]
