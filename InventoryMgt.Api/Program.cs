@@ -16,7 +16,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod();
+        policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod().WithExposedHeaders("X-Pagination");
     });
 });
 var app = builder.Build();
