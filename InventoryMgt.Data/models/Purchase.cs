@@ -12,4 +12,6 @@ public class Purchase : BaseSchema
     public DateTime PurchaseDate { get; set; }
     [MaxLength(100)]
     public string? Description { get; set; }
+
+    public string ProductName { get; set; }
 }
