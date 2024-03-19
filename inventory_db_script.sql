@@ -159,9 +159,11 @@ select Count(p.Id) as TotalRecords,CAST(CEILING((count(p.Id)*1.0)/@limit)as int)
 		 and p.IsDeleted=0 and c.IsDeleted=0 
 end
 
--- purchase procedures
+-- purchase stored procedures
 
-create procedure dbo.AddPurchase
+-- usp: add purchase
+
+create procedure dbo.usp_AddPurchase
  @ProductId int, @PurchaseDate datetime,
  @Quantity int,@Price decimal(18,2)
 as begin
@@ -203,7 +205,9 @@ begin Transaction;
  end catch
 end
 
-create procedure dbo.UpdatePurchase
+-- usp: update purchase
+
+create procedure dbo.usp_UpdatePurchase
  @Id int,
  @ProductId int, @PurchaseDate datetime,
  @Quantity int,@Price decimal(18,2)
@@ -216,11 +220,13 @@ begin Transaction;
 
   -- managing stock
   select @previousProductId=ProductId, @previousQuantity=Quantity from Purchase where Id=@Id
+  -- if we are having the same product
   if(@previousProductId=@ProductId)
    begin
     update Stock set Quantity=(Quantity-@previousQuantity)+@Quantity where ProductId=@ProductId;
    end
 
+   -- if we are having the different product
    else
    begin
     --decrease the quantity of previous product
@@ -255,3 +261,128 @@ begin Transaction;
  end catch
 end
 
+-- usp: get product by id
+create procedure dbo.usp_GetProductById @Id int
+as
+begin
+ select purchase.*,product.ProductName from
+   Purchase purchase join Product product
+   on purchase.ProductId = product.Id
+   where purchase.IsDeleted=0 and product.IsDeleted=0 and purchase.Id=@Id
+end
+
+-- usp: delete product
+
+create procedure dbo.usp_DeleteProduct @Id int
+as
+begin
+ begin transaction;
+ begin try
+  declare @productId int,@quantity int;
+
+  select @productId=productId,@quantity=Quantity from Purchase where Id=@Id;
+
+  update Purchase set IsDeleted=1 where Id=@Id;
+
+  if exists(select 1 from stock where productId=@productId)
+   begin
+    update Stock set Quantity=Quantity-@quantity;
+   end
+  commit transaction;
+ end try
+ begin catch
+  rollback transaction;
+  DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+    DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+    DECLARE @ErrorState INT = ERROR_STATE();
+    RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+ end catch
+end
+
+-- usp: get purchases
+
+create procedure dbo.usp_getPurchases
+@dateFrom datetime = null,
+@dateTo datetime = null,
+@productName nvarchar(100) = null,
+@page int =1,@limit int=4,@sortDirection nvarchar(4)='asc',@sortColumn nvarchar(50)='Id'
+as
+begin
+
+select purchase.*,product.ProductName from
+   Purchase purchase join Product product
+   on purchase.ProductId = product.Id
+   where purchase.IsDeleted=0 and product.IsDeleted=0
+   AND
+(
+    -- Condition 1: No filter columns passed
+    (
+        @dateFrom IS NULL AND @dateTo IS NULL AND @productName IS NULL
+    )
+    OR
+    -- Condition 2: User passes productName only
+    (
+        @dateFrom IS NULL AND @dateTo IS NULL AND @productName IS NOT NULL
+        AND product.ProductName like '%'+@productName+'%'
+    )
+    OR
+    -- Condition 3: User passes dateFrom, dateTo only
+    (
+        @dateFrom IS NOT NULL AND @dateTo IS NOT NULL AND @productName IS NULL
+        AND purchase.PurchaseDate >= @dateFrom AND purchase.PurchaseDate <=@dateTo
+    )
+    OR
+    -- Condition 4: User passes dateFrom, dateTo and productName together
+    (
+        @dateFrom IS NOT NULL AND @dateTo IS NOT NULL AND @productName IS NOT NULL
+        AND purchase.PurchaseDate >= @dateFrom AND purchase.PurchaseDate <=@dateTo
+        AND product.ProductName = @productName
+    )
+)
+order by 
+case when @sortColumn='Id' and @sortDirection='asc' then purchase.Id end,
+case when @sortColumn='Id' and @sortDirection='desc' then purchase.Id end desc,
+case when @sortColumn='ProductName' and @sortDirection='asc' then product.ProductName end,
+case when @sortColumn='ProductName' and @sortDirection='desc' then product.ProductName end desc,
+case when @sortColumn='Price' and @sortDirection='asc' then purchase.Price end,
+case when @sortColumn='Price' and @sortDirection='desc' then purchase.Price end desc,
+case when @sortColumn='PurchaseDate' and @sortDirection='asc' then purchase.PurchaseDate end,
+case when @sortColumn='PurchaseDate' and @sortDirection='desc' then purchase.PurchaseDate end desc
+
+OFFSET(@page-1)*@limit ROWS
+fetch next @limit rows only;
+
+-- second result set returns totalRecords with filter in table
+
+select Count(purchase.Id) as TotalRecords,CAST(CEILING((count(purchase.Id)*1.0)/@limit)as int) as TotalPages from
+   Purchase purchase join Product product
+   on purchase.ProductId = product.Id
+   where purchase.IsDeleted=0 and product.IsDeleted=0
+   AND
+(
+    -- Condition 1: No filter columns passed
+    (
+        @dateFrom IS NULL AND @dateTo IS NULL AND @productName IS NULL
+    )
+    OR
+    -- Condition 2: User passes productName only
+    (
+        @dateFrom IS NULL AND @dateTo IS NULL AND @productName IS NOT NULL
+        AND product.ProductName like '%'+@productName+'%'
+    )
+    OR
+    -- Condition 3: User passes dateFrom, dateTo only
+    (
+        @dateFrom IS NOT NULL AND @dateTo IS NOT NULL AND @productName IS NULL
+        AND purchase.PurchaseDate >= @dateFrom AND purchase.PurchaseDate <=@dateTo
+    )
+    OR
+    -- Condition 4: User passes dateFrom, dateTo and productName together
+    (
+        @dateFrom IS NOT NULL AND @dateTo IS NOT NULL AND @productName IS NOT NULL
+        AND purchase.PurchaseDate >= @dateFrom AND purchase.PurchaseDate <=@dateTo
+        AND product.ProductName = @productName
+    )
+)
+
+end
