@@ -203,3 +203,55 @@ begin Transaction;
  end catch
 end
 
+create procedure dbo.UpdatePurchase
+ @Id int,
+ @ProductId int, @PurchaseDate datetime,
+ @Quantity int,@Price decimal(18,2)
+as begin
+begin Transaction;
+ begin try
+  declare @previousProductId int,@previousQuantity int
+  update  Purchase set UpdateDate=getdate(),
+    ProductId=@ProductId,PurchaseDate=@PurchaseDate,Quantity=@Quantity,Price=@Price
+
+  -- managing stock
+  select @previousProductId=ProductId, @previousQuantity=Quantity from Purchase where Id=@Id
+  if(@previousProductId=@ProductId)
+   begin
+    update Stock set Quantity=(Quantity-@previousQuantity)+@Quantity where ProductId=@ProductId;
+   end
+
+   else
+   begin
+    --decrease the quantity of previous product
+    update Stock set Quantity=Quantity-@previousQuantity where ProductId=@ProductId;
+
+	-- increasing quantity of new product
+	if exists(select 1 from Stock where productId=@ProductId)
+	 begin
+	  update Stock set Quantity=Quantity+@Quantity where ProductId=@ProductId;
+	 end
+	else
+	 begin
+      insert into Stock(ProductId,Quantity) values (@ProductId,@Quantity)
+     end
+   end
+
+  COMMIT TRANSACTION;
+
+  --  returning updated purchase entry
+   select purchase.*,product.ProductName from
+   Purchase purchase join Product product
+   on purchase.ProductId = product.Id
+   where purchase.IsDeleted=0 and product.IsDeleted=0 and purchase.Id=@Id
+ end try
+
+ begin catch
+   ROLLBACK TRANSACTION;
+    DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+    DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+    DECLARE @ErrorState INT = ERROR_STATE();
+    RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+ end catch
+end
+
