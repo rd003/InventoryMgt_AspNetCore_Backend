@@ -158,3 +158,48 @@ select Count(p.Id) as TotalRecords,CAST(CEILING((count(p.Id)*1.0)/@limit)as int)
          on p.CategoryId=c.Id where (@searchTerm is null or p.ProductName like '%'+@searchTerm+'%' or c.CategoryName like '%'+@searchTerm+'%') 
 		 and p.IsDeleted=0 and c.IsDeleted=0 
 end
+
+-- purchase procedures
+
+create procedure dbo.AddPurchase
+ @ProductId int, @PurchaseDate datetime,
+ @Quantity int,@Price decimal(18,2)
+as begin
+begin Transaction;
+ begin try
+  declare @createdPurchaseId int;
+
+  insert into Purchase(CreateDate,UpdateDate,IsDeleted,ProductId,PurchaseDate,Quantity,Price)
+  values
+  (getdate(),getdate(),0,@ProductId,@PurchaseDate,@Quantity,@Price);
+
+  set @createdPurchaseId=SCOPE_IDENTITY();
+
+  -- managing stock
+  if exists(select 1 from Stock where ProductId=@ProductId)
+  begin
+    update Stock set Quantity=Quantity+@Quantity where ProductId=@ProductId;
+  end
+  else
+  begin
+    insert into Stock(ProductId,Quantity) values (@ProductId,@Quantity)
+  end
+  
+  COMMIT TRANSACTION;
+  --  returning created purchase entry
+
+   select purchase.*,product.ProductName from
+   Purchase purchase join Product product
+   on purchase.ProductId = product.Id
+   where purchase.IsDeleted=0 and product.IsDeleted=0 and purchase.Id=@createdPurchaseId
+ end try
+
+ begin catch
+   ROLLBACK TRANSACTION;
+    DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+    DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+    DECLARE @ErrorState INT = ERROR_STATE();
+    RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+ end catch
+end
+
