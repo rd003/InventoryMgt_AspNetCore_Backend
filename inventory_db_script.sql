@@ -101,6 +101,7 @@ begin
 declare @lastId int
 insert into Product (CreateDate,UpdateDate,IsDeleted,ProductName,CategoryId,Price)
 values(getdate(),getdate(),0,@ProductName,@CategoryId,@Price)
+
 select @lastId=SCOPE_IDENTITY()
 
 select p.*,c.CategoryName from Product p join Category c on p.CategoryId = c.Id
@@ -124,6 +125,7 @@ select p.*,c.CategoryName from Product p join Category c on p.CategoryId = c.Id
 where p.IsDeleted=0 and c.IsDeleted=0 and p.Id=@Id
 end
 
+-- usp: get products
 
 create procedure usp_getProducts 
   @page int=1,
@@ -164,16 +166,16 @@ end
 -- usp: add purchase
 
 create procedure dbo.usp_AddPurchase
- @ProductId int, @PurchaseDate datetime,
- @Quantity int,@Price decimal(18,2)
+ @ProductId int , @PurchaseDate datetime ,
+ @Quantity int,@Price decimal(18,2) ,@Description nvarchar(100)
 as begin
 begin Transaction;
  begin try
   declare @createdPurchaseId int;
 
-  insert into Purchase(CreateDate,UpdateDate,IsDeleted,ProductId,PurchaseDate,Quantity,Price)
+  insert into Purchase(CreateDate,UpdateDate,IsDeleted,ProductId,PurchaseDate,Quantity,Price,[Description])
   values
-  (getdate(),getdate(),0,@ProductId,@PurchaseDate,@Quantity,@Price);
+  (getdate(),getdate(),0,@ProductId,@PurchaseDate,@Quantity,@Price,@Description);
 
   set @createdPurchaseId=SCOPE_IDENTITY();
 
@@ -210,13 +212,13 @@ end
 create procedure dbo.usp_UpdatePurchase
  @Id int,
  @ProductId int, @PurchaseDate datetime,
- @Quantity int,@Price decimal(18,2)
+ @Quantity int,@Price decimal(18,2),@Description nvarchar(100)
 as begin
 begin Transaction;
  begin try
   declare @previousProductId int,@previousQuantity int
   update  Purchase set UpdateDate=getdate(),
-    ProductId=@ProductId,PurchaseDate=@PurchaseDate,Quantity=@Quantity,Price=@Price
+    ProductId=@ProductId,PurchaseDate=@PurchaseDate,Quantity=@Quantity,Price=@Price,[Description]=@Description
 
   -- managing stock
   select @previousProductId=ProductId, @previousQuantity=Quantity from Purchase where Id=@Id

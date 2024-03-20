@@ -13,5 +13,12 @@ public class Purchase : BaseSchema
     [MaxLength(100)]
     public string? Description { get; set; }
 
-    public string ProductName { get; set; }
+    [NotNull]
+    public double Price { get; set; }
+    public string? ProductName { get; set; }
+}
+
+public class PaginatedPurchase : PaginationBase
+{
+    public IEnumerable<Purchase> Purchases { get; set; }
 }

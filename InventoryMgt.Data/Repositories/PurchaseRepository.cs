@@ -1,38 +1,88 @@
+using System.Data;
+using Dapper;
 using InventoryMgt.Data.Models;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 
 public interface IPurchaseRepository
 {
     Task<Purchase> AddPurchase(Purchase purchase);
     Task<Purchase> UpdatePurchase(Purchase purchase);
-    Task<Purchase> RemovePurchase(int id);
-    Task<Purchase> GetPurchase(int id);
-    Task<IEnumerable<Purchase>> GetPurchases();
+    Task RemovePurchase(int id);
+    Task<Purchase?> GetPurchase(int id);
+    Task<PaginatedPurchase> GetPurchases(int page = 1, int limit = 4, string? productName = null, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortColumn = null, string? sortDirection = null);
 }
 
-class PurchaseRepository : IPurchaseRepository
+public class PurchaseRepository : IPurchaseRepository
 {
-    public Task<Purchase> AddPurchase(Purchase purchase)
+    private readonly IConfiguration _configuration;
+    private readonly string _connectionString;
+    public PurchaseRepository(IConfiguration configuration)
     {
-        throw new NotImplementedException();
+        _configuration = configuration;
+        _connectionString = this._configuration.GetConnectionString("default") ?? "";
+    }
+    public async Task<Purchase> AddPurchase(Purchase purchase)
+    {
+        using IDbConnection connection = new SqlConnection(_connectionString);
+        Purchase createdPurchase = await connection.QuerySingleAsync<Purchase>("usp_AddPurchase", new
+        {
+            purchase.PurchaseDate,
+            purchase.ProductId,
+            purchase.Description,
+            purchase.Quantity,
+            purchase.Price
+        }, commandType: CommandType.StoredProcedure);
+        return createdPurchase;
     }
 
-    public Task<Purchase> GetPurchase(int id)
+    public async Task<Purchase?> GetPurchase(int id)
     {
-        throw new NotImplementedException();
+        using IDbConnection connection = new SqlConnection(_connectionString);
+        var purchase = await connection.QueryFirstOrDefaultAsync<Purchase>("usp_GetPurchaseById", new { Id = id }, commandType: CommandType.StoredProcedure);
+        return purchase;
     }
 
-    public Task<IEnumerable<Purchase>> GetPurchases()
+    public async Task<PaginatedPurchase> GetPurchases(int page = 1, int limit = 4, string? productName = null, DateTime? dateFrom = null, DateTime? dateTo = null, string? sortColumn = null, string? sortDirection = null)
     {
-        throw new NotImplementedException();
+        using IDbConnection connection = new SqlConnection(_connectionString);
+        var param = new
+        {
+            page,
+            limit,
+            productName,
+            dateFrom,
+            dateTo,
+            sortColumn,
+            sortDirection
+        };
+        var multipleResult = await connection.QueryMultipleAsync("usp_getPurchases", param, commandType: CommandType.StoredProcedure);
+        var purchases = multipleResult.Read<Purchase>();
+        var paginationData = multipleResult.ReadFirst<PaginationBase>();
+        return new PaginatedPurchase { Purchases = purchases, Page = page, Limit = limit, TotalPages = paginationData.TotalPages, TotalRecords = paginationData.TotalRecords };
     }
 
-    public Task<Purchase> RemovePurchase(int id)
+    public async Task RemovePurchase(int id)
     {
-        throw new NotImplementedException();
+        using IDbConnection connection = new SqlConnection(_connectionString);
+        await connection.ExecuteAsync("usp_DeletePurchase", new
+        {
+            Id = id
+        }, commandType: CommandType.StoredProcedure);
     }
 
-    public Task<Purchase> UpdatePurchase(Purchase purchase)
+    public async Task<Purchase> UpdatePurchase(Purchase purchase)
     {
-        throw new NotImplementedException();
+        using IDbConnection connection = new SqlConnection(_connectionString);
+        Purchase updatedPurchase = await connection.QuerySingleAsync<Purchase>("usp_UpdatePurchase", new
+        {
+            purchase.Id,
+            purchase.PurchaseDate,
+            purchase.ProductId,
+            purchase.Description,
+            purchase.Quantity,
+            purchase.Price
+        }, commandType: CommandType.StoredProcedure);
+        return updatedPurchase;
     }
 }
