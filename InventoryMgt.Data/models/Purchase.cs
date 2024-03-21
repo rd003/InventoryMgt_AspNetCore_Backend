@@ -6,7 +6,7 @@ public class Purchase : BaseSchema
 {
     [NotNull]
     public int ProductId { get; set; }
-    [NotNull, MinLength(0)]
+    [NotNull]
     public double Quantity { get; set; }
     [NotNull]
     public DateTime PurchaseDate { get; set; }

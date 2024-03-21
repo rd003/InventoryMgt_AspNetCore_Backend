@@ -23,9 +23,9 @@ Price decimal(18,2) not null
 
 create table Stock(
 Id int primary key identity,
-CreateDate  datetime not null,
-UpdateDate  datetime not null,
-IsDeleted bit,
+CreateDate  datetime not null default getdate(),
+UpdateDate  datetime not null default getdate(),
+IsDeleted bit default 0,
 ProductId int references Product(Id) unique, 
 Quantity float not null
 )
@@ -167,7 +167,7 @@ end
 
 create procedure dbo.usp_AddPurchase
  @ProductId int , @PurchaseDate datetime ,
- @Quantity int,@Price decimal(18,2) ,@Description nvarchar(100)
+ @Quantity float,@Price decimal(18,2) ,@Description nvarchar(100)
 as begin
 begin Transaction;
  begin try
@@ -212,16 +212,18 @@ end
 create procedure dbo.usp_UpdatePurchase
  @Id int,
  @ProductId int, @PurchaseDate datetime,
- @Quantity int,@Price decimal(18,2),@Description nvarchar(100)
+ @Quantity float,@Price decimal(18,2),@Description nvarchar(100)
 as begin
 begin Transaction;
  begin try
   declare @previousProductId int,@previousQuantity int
+  select @previousProductId=ProductId, @previousQuantity=Quantity from Purchase where Id=@Id
+
   update  Purchase set UpdateDate=getdate(),
     ProductId=@ProductId,PurchaseDate=@PurchaseDate,Quantity=@Quantity,Price=@Price,[Description]=@Description
-
+	where Id=@Id
   -- managing stock
-  select @previousProductId=ProductId, @previousQuantity=Quantity from Purchase where Id=@Id
+ 
   -- if we are having the same product
   if(@previousProductId=@ProductId)
    begin
@@ -232,7 +234,7 @@ begin Transaction;
    else
    begin
     --decrease the quantity of previous product
-    update Stock set Quantity=Quantity-@previousQuantity where ProductId=@ProductId;
+    update Stock set Quantity=Quantity-@previousQuantity where ProductId=@previousProductId;
 
 	-- increasing quantity of new product
 	if exists(select 1 from Stock where productId=@ProductId)
@@ -263,8 +265,8 @@ begin Transaction;
  end catch
 end
 
--- usp: get product by id
-create procedure dbo.usp_GetProductById @Id int
+-- usp: get purchase by id
+create procedure dbo.usp_GetPurchaseById @Id int
 as
 begin
  select purchase.*,product.ProductName from
@@ -275,7 +277,7 @@ end
 
 -- usp: delete product
 
-create procedure dbo.usp_DeleteProduct @Id int
+create procedure dbo.usp_DeletePurchase @Id int
 as
 begin
  begin transaction;
