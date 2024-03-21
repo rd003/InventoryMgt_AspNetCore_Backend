@@ -59,6 +59,8 @@ public class PurchaseRepository : IPurchaseRepository
         var multipleResult = await connection.QueryMultipleAsync("usp_getPurchases", param, commandType: CommandType.StoredProcedure);
         var purchases = multipleResult.Read<Purchase>();
         var paginationData = multipleResult.ReadFirst<PaginationBase>();
+        paginationData.Page = page;
+        paginationData.Limit = limit;
         return new PaginatedPurchase { Purchases = purchases, Pagination = paginationData };
     }
 

@@ -290,7 +290,7 @@ begin
 
   if exists(select 1 from stock where productId=@productId)
    begin
-    update Stock set Quantity=Quantity-@quantity;
+    update Stock set Quantity=Quantity-@quantity where ProductId=@productId;
    end
   commit transaction;
  end try
@@ -302,6 +302,7 @@ begin
     RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
  end catch
 end
+
 
 -- usp: get purchases
 

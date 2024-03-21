@@ -49,7 +49,7 @@ public class PurchaseController : ControllerBase
     {
         var purchase = await _purchaseRepository.GetPurchase(id);
         if (purchase == null)
-            throw new NotFoundException($"product with id: {id} does not found");
+            throw new NotFoundException($"Record with id: {id} does not found");
         await _purchaseRepository.RemovePurchase(id);
         return NoContent();
     }
