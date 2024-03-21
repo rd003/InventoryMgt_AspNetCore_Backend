@@ -18,7 +18,8 @@ public class Purchase : BaseSchema
     public string? ProductName { get; set; }
 }
 
-public class PaginatedPurchase : PaginationBase
+public class PaginatedPurchase
 {
     public IEnumerable<Purchase> Purchases { get; set; }
+    public PaginationBase Pagination { get; set; }
 }
