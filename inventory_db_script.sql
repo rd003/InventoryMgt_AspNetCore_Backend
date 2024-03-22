@@ -341,7 +341,7 @@ select purchase.*,product.ProductName from
     (
         @dateFrom IS NOT NULL AND @dateTo IS NOT NULL AND @productName IS NOT NULL
         AND purchase.PurchaseDate >= @dateFrom AND purchase.PurchaseDate <=@dateTo
-        AND product.ProductName = @productName
+        AND product.ProductName like '%'+@productName+'%'
     )
 )
 order by 
@@ -386,7 +386,7 @@ select Count(purchase.Id) as TotalRecords,CAST(CEILING((count(purchase.Id)*1.0)/
     (
         @dateFrom IS NOT NULL AND @dateTo IS NOT NULL AND @productName IS NOT NULL
         AND purchase.PurchaseDate >= @dateFrom AND purchase.PurchaseDate <=@dateTo
-        AND product.ProductName = @productName
+        AND product.ProductName like '%'+@productName+'%'
     )
 )
 
